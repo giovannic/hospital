@@ -109,7 +109,7 @@ public class PatientAgent extends Agent {
 			try {
     			myAgent.getContentManager().fillContent(requestMsg, f);
     			send(requestMsg);
-    			System.out.println("requested");
+    			//System.out.println("requested");
 			} catch (Exception pe) {
 				pe.printStackTrace();
 			}
@@ -117,10 +117,13 @@ public class PatientAgent extends Agent {
 			//add response behaviour
 			addBehaviour(new SimpleAchieveREInitiator(myAgent, requestMsg) {
 				protected void handleInform(ACLMessage msg) {
-					System.out.println("Engagement successfully completed");	
+					System.out.println("Engagement successfully completed");
+					allocation = new Appointment();
+					
 				}
 				protected void handleRefuse(ACLMessage msg) {
-					System.out.println("Engagement refused");
+					//System.out.println("Engagement refused");
+					
 				}
 			});
 		}

@@ -64,7 +64,7 @@ public class HospitalAgent extends Agent {
 		public void action() {
 			ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 			if(msg != null) {
-				System.out.println("Agent "+getLocalName()+": REQUEST message received.");
+				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
 				ACLMessage reply = msg.createReply();
 				reply.addReceiver(msg.getSender());
 				
@@ -73,6 +73,9 @@ public class HospitalAgent extends Agent {
 				}
 				else {
 					int slot = -1;
+					takenSlots[--available] = msg.getSender();
+					slot = available;
+					/*
 					try {
 						ContentElement content = getContentManager().extractContent(msg);
 						takenSlots[--available] = msg.getSender();
@@ -86,6 +89,7 @@ public class HospitalAgent extends Agent {
 					} catch (OntologyException e) {
 						e.printStackTrace();
 					}
+					*/
 					if(slot >= 0) {
 						reply.setPerformative(ACLMessage.INFORM);
 						reply.setContent(Integer.toString(slot));
