@@ -7,6 +7,7 @@ import jade.content.schema.ConceptSchema;
 import jade.content.schema.PredicateSchema;
 import jade.content.schema.PrimitiveSchema;
 
+@SuppressWarnings("serial")
 public class AppointmentOntology extends Ontology {
 
 	// Concepts
