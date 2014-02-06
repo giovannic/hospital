@@ -28,6 +28,7 @@ public class AppointmentOntology extends Ontology {
 
 		try {
 			add(new ConceptSchema(APPOINTMENT), Appointment.class);
+			add(new PredicateSchema(AVAILABLE), Available.class);
 
 			ConceptSchema cs = (ConceptSchema) getSchema(APPOINTMENT);
 			cs.add(APPOINTMENT_NUMBER,

@@ -117,7 +117,7 @@ public class PatientAgent extends Agent {
 			requestMsg.setOntology(AppointmentOntology.NAME);
 			requestMsg.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
 			
-			Free f = new Free();
+			Available f = new Available();
 			Appointment a = new Appointment();
 			a.setNumber(preferences.iterator().next().iterator().next());
 			f.set_appointment(a);

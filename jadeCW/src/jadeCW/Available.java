@@ -2,7 +2,7 @@ package jadeCW;
 
 import jade.content.Predicate;
 
-public class Free implements Predicate {
+public class Available implements Predicate {
 	private Appointment _appointment;
 
 	public Appointment get_appointment() {

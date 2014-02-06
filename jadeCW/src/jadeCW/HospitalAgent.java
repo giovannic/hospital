@@ -27,7 +27,7 @@ public class HospitalAgent extends Agent {
 	  		sd.setName(serviceName);
 	  		sd.setType("allocate-appointments");
 	  		// Agents that want to use this service need to "know" the appointment-ontology
-	  		sd.addOntologies(AppointmentOntology.NAME);
+			getContentManager().registerOntology(AppointmentOntology.getInstance());
 	  		// Agents that want to use this service need to "speak" the FIPA-SL language
 	  		sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
 	  		dfd.addServices(sd);
