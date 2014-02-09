@@ -71,6 +71,11 @@ public class PatientAgent extends Agent {
 	private void setProvider(AID provider){
 		this.provider = provider;
 	}
+	
+	protected void takeDown() {
+		System.out.println(getLocalName() +": " + 
+				(allocation != null ? "Appointment " + allocation.getNumber() : "null"));
+	}
 
 	public class RequestAppointment extends Behaviour {
 
@@ -118,7 +123,7 @@ public class PatientAgent extends Agent {
 				protected void handleInform(ACLMessage msg) {
 					System.out.println("Engagement successfully completed");
 					allocation = new Appointment();
-					
+					allocation.setNumber(Integer.parseInt(msg.getContent()));
 				}
 				protected void handleRefuse(ACLMessage msg) {
 					System.out.println("Engagement refused");
