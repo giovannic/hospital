@@ -109,7 +109,8 @@ public class PatientAgent extends Agent {
 			
 			try {
     			myAgent.getContentManager().fillContent(requestMsg, f);
-    			send(requestMsg);
+    			//XXX:NOTE, for some reason, send is called on requestMsg after returning from action -- WEIRD
+    			//send(requestMsg);
     			//System.out.println("requested");
 			} catch (Exception pe) {
 				pe.printStackTrace();
