@@ -57,8 +57,8 @@ public class HospitalAgent extends Agent {
 	
 	public void takeDown() {
 		for( int i = 0; i < takenSlots.length; i++) {
-			System.out.println(this.getLocalName() + ": Appointment " + i+1 + ": " + 
-					takenSlots[i]!=null?takenSlots[i]:"null");
+			System.out.println(this.getLocalName() + ": Appointment " + (i+1) + ": " + 
+					(takenSlots[i]!=null?takenSlots[i].getLocalName():"null"));
 		}
 	}
 	
