@@ -68,6 +68,8 @@ public class HospitalAgent extends Agent {
 			super(agent);
 		}
 
+		//note: patient appts use 1-based indexing, so always minus one on receive
+		//and plus one on send
 		public void action() {
 			ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 			if(msg != null) {
