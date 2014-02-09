@@ -109,8 +109,6 @@ public class PatientAgent extends Agent {
 			
 			try {
     			myAgent.getContentManager().fillContent(requestMsg, f);
-    			send(requestMsg);
-    			//System.out.println("requested");
 			} catch (Exception pe) {
 				pe.printStackTrace();
 			}
