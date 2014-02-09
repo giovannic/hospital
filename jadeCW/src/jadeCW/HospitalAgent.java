@@ -101,7 +101,7 @@ public class HospitalAgent extends Agent {
 					*/
 					if(slot >= 0) {
 						reply.setPerformative(ACLMessage.INFORM);
-						reply.setContent(Integer.toString(slot));
+						reply.setContent(Integer.toString(++slot));
 						System.out.println("inform! " + slot);
 					} else {
 						System.out.println("REFUSE!");
