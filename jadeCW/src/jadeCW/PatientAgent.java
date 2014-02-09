@@ -21,6 +21,7 @@ public class PatientAgent extends Agent {
 	AID provider;
 	Appointment allocation;
 	Preferences preferences;
+	protected boolean finished = false;
 	
 	protected void setup() {
 		preferences = Preferences.parsePreferences(getArguments()[0].toString());
@@ -126,13 +127,15 @@ public class PatientAgent extends Agent {
 					
 				}
 			});
+			
+			finished = true;
 		}
 		
 		
 
 		@Override
 		public boolean done() {
-			return allocation != null;
+			return finished;
 		}
 
 	}
