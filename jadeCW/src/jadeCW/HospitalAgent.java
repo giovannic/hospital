@@ -57,8 +57,8 @@ public class HospitalAgent extends Agent {
 	
 	public void takeDown() {
 		for( int i = 0; i < takenSlots.length; i++) {
-			System.out.println(this.getLocalName() + ": Appointment " + i+1 + ": " + 
-					takenSlots[i]!=null?takenSlots[i]:"null");
+			System.out.println(this.getLocalName() + ": Appointment " + (i+1) + ": " + 
+					(takenSlots[i]!=null?takenSlots[i].getLocalName():"null"));
 		}
 	}
 	
@@ -69,8 +69,18 @@ public class HospitalAgent extends Agent {
 		}
 
 		public void action() {
+			//1 message here
+			System.out.println(getCurQueueSize());
 			ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 			if(msg != null) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				//3 messages plus "received" message here. where does the extra message come from?!
+				System.out.println(getCurQueueSize());
 				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
 				ACLMessage reply = msg.createReply();
 				reply.addReceiver(msg.getSender());
@@ -100,7 +110,7 @@ public class HospitalAgent extends Agent {
 					if(slot >= 0) {
 						reply.setPerformative(ACLMessage.INFORM);
 						reply.setContent(Integer.toString(slot));
-						System.out.println("inform! " + slot);
+						System.out.println("inform! " + slot + " patient " + msg.getSender().getLocalName());
 					} else {
 						System.out.println("REFUSE!");
 						reply.setPerformative(ACLMessage.REFUSE);

@@ -127,7 +127,7 @@ public class PatientAgent extends Agent {
 					
 				}
 			});
-			
+			System.out.println("finished = " + finished);
 			finished = true;
 		}
 		
