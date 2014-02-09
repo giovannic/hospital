@@ -55,6 +55,13 @@ public class HospitalAgent extends Agent {
 	  	}
 	}
 	
+	public void takeDown() {
+		for( int i = 0; i < takenSlots.length; i++) {
+			System.out.println(this.getLocalName() + ": Appointment " + i+1 + ": " + 
+					takenSlots[i]!=null?takenSlots[i]:"null");
+		}
+	}
+	
 	public class AllocateAppointment extends CyclicBehaviour {
 
 		public AllocateAppointment(Agent agent) {
@@ -93,7 +100,9 @@ public class HospitalAgent extends Agent {
 					if(slot >= 0) {
 						reply.setPerformative(ACLMessage.INFORM);
 						reply.setContent(Integer.toString(slot));
+						System.out.println("inform! " + slot);
 					} else {
+						System.out.println("REFUSE!");
 						reply.setPerformative(ACLMessage.REFUSE);
 					}
 				}

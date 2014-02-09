@@ -122,7 +122,7 @@ public class PatientAgent extends Agent {
 					
 				}
 				protected void handleRefuse(ACLMessage msg) {
-					//System.out.println("Engagement refused");
+					System.out.println("Engagement refused");
 					
 				}
 			});
