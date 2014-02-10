@@ -1,15 +1,15 @@
 package jadeCW;
 
-import jade.content.Concept;
-import jade.content.ContentElement;
+import jade.content.Predicate;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.OntologyException;
 import jade.content.onto.UngroundedException;
-import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.ServiceException;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.messaging.TopicManagementHelper;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -29,6 +29,10 @@ public class HospitalAgent extends Agent {
 	public static final String NEW_APP = "NEW_APP";
 	public static final String FIND_OWNER = "FIND_OWNER";
 	
+	//message matcher
+	private final AppointmentMessageMatcher messageMatcher = 
+			new AppointmentMessageMatcher(this);
+	
 	@Override
 	protected void setup(){
 		int appts = Integer.parseInt(getArguments()[0].toString());
@@ -36,8 +40,9 @@ public class HospitalAgent extends Agent {
 		takenSlots = new AID[appts];
 		addBehaviour(new AllocateAppointment(this));
 		registerAppointmentAgent("Hospital");
+		
 	}
-	
+
 	protected void registerAppointmentAgent(String serviceName) {
 		try {
 	  		DFAgentDescription dfd = new DFAgentDescription();
@@ -47,7 +52,7 @@ public class HospitalAgent extends Agent {
 	  		sd.setType("allocate-appointments");
 			getContentManager().registerLanguage(new SLCodec(), FIPANames.ContentLanguage.FIPA_SL);
 	  		// Agents that want to use this service need to "know" the appointment-ontology
-			getContentManager().registerOntology(AppointmentOntology.getInstance());
+			getContentManager().registerOntology(AppointmentOntology.getInstance(), AppointmentOntology.NAME);
 	  		// Agents that want to use this service need to "speak" the FIPA-SL language
 	  		sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
 	  		dfd.addServices(sd);
@@ -75,7 +80,9 @@ public class HospitalAgent extends Agent {
 		//note: patient appts use 1-based indexing, so always minus one on receive
 		//and plus one on send
 		public void action() {
-			ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+			//receive only relevant messages
+			ACLMessage msg = receive(messageMatcher.ObtainRequest);
+			
 			if(msg != null) {
 				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
 				ACLMessage reply = msg.createReply();
@@ -118,6 +125,50 @@ public class HospitalAgent extends Agent {
 			} else {
 				block();
 			}
+			
+			
+		}	
+	}
+	
+	
+	public class RespondToQuery extends CyclicBehaviour {
+
+		public RespondToQuery(Agent agent) {
+			super(agent);
+		}
+
+		//note: patient appts use 1-based indexing, so always minus one on receive
+		//and plus one on send
+		public void action() {
+			
+			//receive only owner requests
+			ACLMessage msg = receive(messageMatcher.OwnerRequest);
+			
+			if(msg != null) {
+				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
+				ACLMessage reply = msg.createReply();
+				reply.addReceiver(msg.getSender());
+				try {
+					Appointment a = ((Owner)myAgent.getContentManager().extractContent(msg))
+							.getAppointment();
+					//appointment not in range
+					
+					//appointment owner not known
+					
+					//appointment owner
+				} catch (UngroundedException e) {
+					e.printStackTrace();
+				} catch (CodecException e) {
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					e.printStackTrace();
+				}
+				
+				send(reply);
+			} else {
+				block();
+			}
+			
 		}	
 	}
 }
