@@ -11,7 +11,9 @@ import jade.content.onto.UngroundedException;
 import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.ServiceException;
 import jade.core.behaviours.Behaviour;
+import jade.core.messaging.TopicManagementHelper;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -32,13 +34,18 @@ public class PatientAgent extends Agent {
 	protected boolean finished = false;
 	AID agentWithPreferred = null;
 	
+	//topics
+	AID obtainRequest;
+	AID ownerRequest;
+	
+	
 	protected void setup() {
 		preferences = Preferences.parsePreferences(getArguments()[0].toString());
 		getContentManager().registerOntology(AppointmentOntology.getInstance(), AppointmentOntology.NAME);
 		getContentManager().registerLanguage(new SLCodec(), FIPANames.ContentLanguage.FIPA_SL);
 		subscribeToAppointments();
 	}
-
+	
 	private void subscribeToAppointments() {
 		// Build the description used as template for the subscription
 		DFAgentDescription template = new DFAgentDescription();
@@ -181,7 +188,6 @@ public class PatientAgent extends Agent {
 
 		@Override
 		public void action() {
-			System.out.println("actio fao 1");
 			//only request if appointment is allocated
 			if(allocation == null){
 				System.out.println("allocation null");
@@ -240,6 +246,7 @@ public class PatientAgent extends Agent {
 				});
 				
 				finished = true;
+				System.out.println("sending fao");
 			}
 		}
 		

@@ -1,8 +1,8 @@
 package jadeCW;
 
+
 import jade.content.Concept;
 import jade.content.ContentElement;
-import jade.content.abs.AbsContentElement;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.OntologyException;
@@ -17,7 +17,6 @@ import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 
 
 @SuppressWarnings("serial")
@@ -30,15 +29,21 @@ public class HospitalAgent extends Agent {
 	public static final String NEW_APP = "NEW_APP";
 	public static final String FIND_OWNER = "FIND_OWNER";
 	
+	//message matcher
+	private final AppointmentMessageMatcher messageMatcher = 
+			new AppointmentMessageMatcher(this);
+	
 	@Override
 	protected void setup(){
 		int appts = Integer.parseInt(getArguments()[0].toString());
 		available = appts;
 		takenSlots = new AID[appts];
 		addBehaviour(new AllocateAppointment(this));
+		addBehaviour(new RespondToQuery(this));
 		registerAppointmentAgent("Hospital");
+		
 	}
-	
+
 	protected void registerAppointmentAgent(String serviceName) {
 		try {
 	  		DFAgentDescription dfd = new DFAgentDescription();
@@ -77,7 +82,9 @@ public class HospitalAgent extends Agent {
 		//note: patient appts use 1-based indexing, so always minus one on receive
 		//and plus one on send
 		public void action() {
-			ACLMessage msg = receive(MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+			//receive only relevant messages
+			ACLMessage msg = receive(messageMatcher.ObtainRequest);
+			
 			if(msg != null) {
 				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
 				ACLMessage reply = msg.createReply();
@@ -130,6 +137,74 @@ public class HospitalAgent extends Agent {
 			} else {
 				block();
 			}
+			
+			
+		}	
+	}
+	
+	
+	public class RespondToQuery extends CyclicBehaviour {
+
+		public RespondToQuery(Agent agent) {
+			super(agent);
+		}
+
+		//note: patient appts use 1-based indexing, so always minus one on receive
+		//and plus one on send
+		public void action() {
+			//receive only owner requests
+			ACLMessage msg = receive(messageMatcher.OwnerRequest);
+			
+			if(msg != null) {
+				System.out.println("message received");
+				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
+				ACLMessage reply = msg.createReply();
+				reply.addReceiver(msg.getSender());
+				try {
+					ContentElement content = (ContentElement)myAgent.getContentManager().extractContent(msg);
+					FindOwner action = (FindOwner) ((Action)content).getAction();
+					Appointment a = action.getAppointment();
+					int wanted = a.getNumber()-1;
+					AID agentOwner = takenSlots[wanted];
+					if( agentOwner == null) {
+						//not assigned
+						System.out.println("No patient assigned appointment: " +
+								wanted+1);
+						reply.setPerformative(ACLMessage.REFUSE);
+					} else if (wanted < 0 || wanted > takenSlots.length){
+						//appointment not in range
+						System.out.println("Invalid appointment: " +
+								(wanted+1));
+						reply.setPerformative(ACLMessage.REFUSE);
+						
+					} else { // appt found
+						reply.setPerformative(ACLMessage.INFORM);
+						IsOwned isOwned = new IsOwned();
+						Owner owner = new Owner();
+						owner.setPatient(agentOwner.getName());
+						Appointment appt = new Appointment();
+						appt.setNumber(wanted);
+						isOwned.setAppointment(appt);
+						isOwned.setOwner(owner);
+						getContentManager().fillContent(reply, isOwned);
+						System.out.println("Preferred appointment " + (wanted+1) + 
+								" assigned to patient: " + owner.getPatient());
+						System.out.println("Desired by patient: " + msg.getSender().getName());
+						
+					}
+				} catch (UngroundedException e) {
+					e.printStackTrace();
+				} catch (CodecException e) {
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					e.printStackTrace();
+				}
+				
+				send(reply);
+			} else {
+				block();
+			}
+			
 		}	
 	}
 }
