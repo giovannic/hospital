@@ -89,21 +89,7 @@ public class HospitalAgent extends Agent {
 						int slot = -1;
 						takenSlots[--available] = msg.getSender();
 						slot = available;
-						/*
-						try {
-							ContentElement content = getContentManager().extractContent(msg);
-							takenSlots[--available] = msg.getSender();
-							slot = available;
-							
-							
-						} catch (UngroundedException e) {
-							e.printStackTrace();
-						} catch (CodecException e) {
-							e.printStackTrace();
-						} catch (OntologyException e) {
-							e.printStackTrace();
-						}
-						*/
+						
 						if(slot >= 0) {
 							reply.setPerformative(ACLMessage.INFORM);
 							reply.setContent(Integer.toString(++slot));

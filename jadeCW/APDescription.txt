@@ -1,1 +1,1 @@
-( ap-description  :name "dyn1176-217.wlan.ic.ac.uk:1099/JADE" :ap-services (set ( ap-service  :name fipa.mts.mtp.http.std :type fipa.mts.mtp.http.std :addresses (sequence http://dyn1176-217.wlan.ic.ac.uk:7778/acc))))
+( ap-description  :name "project06.doc.ic.ac.uk:1099/JADE" :ap-services (set ( ap-service  :name fipa.mts.mtp.http.std :type fipa.mts.mtp.http.std :addresses (sequence http://project06.doc.ic.ac.uk:7778/acc))))
