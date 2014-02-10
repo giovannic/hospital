@@ -3,7 +3,9 @@ package jadeCW;
 import jade.content.onto.BasicOntology;
 import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
+import jade.content.schema.AgentActionSchema;
 import jade.content.schema.ConceptSchema;
+import jade.content.schema.ObjectSchema;
 import jade.content.schema.PredicateSchema;
 import jade.content.schema.PrimitiveSchema;
 
@@ -16,6 +18,10 @@ public class AppointmentOntology extends Ontology {
 
 	public static final String AVAILABLE = "AVAILABLE";
 	public static final String AVAILABLE_APPOINTMENT = "appointment";
+	
+	//Actions
+	public static final String ASSIGN_APPOINTMENT = "AssignAppointment";
+	public static final String FIND_OWNER = "FindOwner";
 
 	private static Ontology theInstance = new AppointmentOntology();
 	public static String NAME = "appointment-ontology";
@@ -29,11 +35,17 @@ public class AppointmentOntology extends Ontology {
 
 		try {
 			add(new ConceptSchema(APPOINTMENT), Appointment.class);
-			add(new PredicateSchema(AVAILABLE), Available.class);
-
 			ConceptSchema cs = (ConceptSchema) getSchema(APPOINTMENT);
-			cs.add(APPOINTMENT_NUMBER,
-					(PrimitiveSchema) getSchema(BasicOntology.INTEGER));
+			cs.add(APPOINTMENT_NUMBER, (PrimitiveSchema) getSchema(BasicOntology.INTEGER), 
+					ObjectSchema.MANDATORY);
+			
+			add(new AgentActionSchema(ASSIGN_APPOINTMENT), AssignAppointment.class);
+			add(new AgentActionSchema(FIND_OWNER), FindOwner.class);
+			AgentActionSchema fo = (AgentActionSchema) getSchema(FIND_OWNER);
+			fo.add(APPOINTMENT, 
+					cs, ObjectSchema.MANDATORY);
+			
+			add(new PredicateSchema(AVAILABLE), Available.class);
 
 			PredicateSchema ps = (PredicateSchema) getSchema(AVAILABLE);
 			ps.add(AVAILABLE_APPOINTMENT,

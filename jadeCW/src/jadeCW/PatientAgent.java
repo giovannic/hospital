@@ -1,6 +1,12 @@
 package jadeCW;
 
+import jade.content.ContentElement;
+import jade.content.Predicate;
+import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
+import jade.content.onto.OntologyException;
+import jade.content.onto.UngroundedException;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -107,14 +113,10 @@ public class PatientAgent extends Agent {
 				return;
 			}
 			
-			//set content
-//			Available f = new Available();
-//			Appointment a = new Appointment();
-//			a.setNumber(preferences.getBestPreferences().iterator().next());
-//			f.setAppointment(a);
-			
+			AssignAppointment act = new AssignAppointment();
+						
 			try {
-				requestMsg.setContent(HospitalAgent.NEW_APP);
+				getContentManager().fillContent(requestMsg, new Action(provider, act));
 			} catch (Exception pe) {
 				pe.printStackTrace();
 			}
@@ -123,8 +125,19 @@ public class PatientAgent extends Agent {
 			addBehaviour(new SimpleAchieveREInitiator(myAgent, requestMsg) {
 				protected void handleInform(ACLMessage msg) {
 					System.out.println("Engagement successfully completed");
-					allocation = new Appointment();
-					allocation.setNumber(Integer.parseInt(msg.getContent()));
+					try {
+						Available content = (Available) getContentManager().extractContent(msg);
+						allocation = content.getAppointment();
+						return;
+					} catch (UngroundedException e) {
+						e.printStackTrace();
+					} catch (CodecException e) {
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						e.printStackTrace();
+					}
+					//retry if error occurs
+					finished = false;
 				}
 				protected void handleRefuse(ACLMessage msg) {
 					System.out.println("Engagement refused");
