@@ -1,22 +1,22 @@
 package jadeCW;
 
-import jade.content.Predicate;
+
+import jade.content.Concept;
+import jade.content.ContentElement;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.OntologyException;
 import jade.content.onto.UngroundedException;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.ServiceException;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.messaging.TopicManagementHelper;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 
 
 @SuppressWarnings("serial")
@@ -55,6 +55,7 @@ public class HospitalAgent extends Agent {
 			getContentManager().registerOntology(AppointmentOntology.getInstance(), AppointmentOntology.NAME);
 	  		// Agents that want to use this service need to "speak" the FIPA-SL language
 	  		sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
+	  		sd.addOntologies(AppointmentOntology.NAME);
 	  		dfd.addServices(sd);
 	  		
 	  		DFService.register(this, dfd);
@@ -87,41 +88,50 @@ public class HospitalAgent extends Agent {
 				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
 				ACLMessage reply = msg.createReply();
 				reply.addReceiver(msg.getSender());
-				switch(msg.getContent()) {
-				case NEW_APP:
-					if(available <= 0){
-						reply.setPerformative(ACLMessage.REFUSE);
-					}
-					else {
-						int slot = -1;
-						takenSlots[--available] = msg.getSender();
-						slot = available;
-						/*
-						try {
-							ContentElement content = getContentManager().extractContent(msg);
+				ContentElement content;
+				try {
+					content = getContentManager().extractContent(msg);
+					Concept action = ((Action)content).getAction();
+					if( action instanceof AssignAppointment ) {
+						System.out.println("Looking for appointment to assign " +
+								"to " + msg.getSender().getLocalName());
+						if(available <= 0){
+							reply.setPerformative(ACLMessage.REFUSE);
+							System.out.println("No appointment available for " +
+								msg.getSender().getLocalName());
+						}
+						else {
+							int slot = -1;
 							takenSlots[--available] = msg.getSender();
 							slot = available;
-							
-							
-						} catch (UngroundedException e) {
-							e.printStackTrace();
-						} catch (CodecException e) {
-							e.printStackTrace();
-						} catch (OntologyException e) {
-							e.printStackTrace();
+							if(slot >= 0) {
+								reply.setPerformative(ACLMessage.INFORM);
+								Available av = new Available();
+								Appointment appt = new Appointment();
+								appt.setNumber(++slot);
+								av.setAppointment(appt);
+								getContentManager().fillContent(reply, av);
+								System.out.println("Appointment " + slot + " assigned to " + msg.getSender().getLocalName());
+							} else {
+								System.out.println("No appointment available for " +
+										msg.getSender().getLocalName());
+								reply.setPerformative(ACLMessage.REFUSE);
+							}
 						}
-						*/
-						if(slot >= 0) {
-							reply.setPerformative(ACLMessage.INFORM);
-							reply.setContent(Integer.toString(++slot));
-							System.out.println("inform! " + slot);
-						} else {
-							System.out.println("REFUSE!");
-							reply.setPerformative(ACLMessage.REFUSE);
-						}
+					} else if( action instanceof FindOwner) {
+						
 					}
+					send(reply);
+				} catch (UngroundedException e) {
+					e.printStackTrace();
+					block();
+				} catch (CodecException e) {
+					e.printStackTrace();
+					block();
+				} catch (OntologyException e) {
+					e.printStackTrace();
+					block();
 				}
-				send(reply);
 			} else {
 				block();
 			}
@@ -152,7 +162,9 @@ public class HospitalAgent extends Agent {
 					Appointment a = ((Owner)myAgent.getContentManager().extractContent(msg))
 							.getAppointment();
 					//appointment not in range
-					
+					if (a.getNumber() < 0 || a.getNumber() > available){
+						
+					}
 					//appointment owner not known
 					
 					//appointment owner
