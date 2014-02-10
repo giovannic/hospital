@@ -24,6 +24,10 @@ public class HospitalAgent extends Agent {
 	
 	private int available;
 	private AID[] takenSlots;
+
+	//Constants
+	public static final String NEW_APP = "NEW_APP";
+	public static final String FIND_OWNER = "FIND_OWNER";
 	
 	@Override
 	protected void setup(){
@@ -76,36 +80,38 @@ public class HospitalAgent extends Agent {
 				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
 				ACLMessage reply = msg.createReply();
 				reply.addReceiver(msg.getSender());
-				
-				if(available <= 0){
-					reply.setPerformative(ACLMessage.REFUSE);
-				}
-				else {
-					int slot = -1;
-					takenSlots[--available] = msg.getSender();
-					slot = available;
-					/*
-					try {
-						ContentElement content = getContentManager().extractContent(msg);
+				switch(msg.getContent()) {
+				case NEW_APP:
+					if(available <= 0){
+						reply.setPerformative(ACLMessage.REFUSE);
+					}
+					else {
+						int slot = -1;
 						takenSlots[--available] = msg.getSender();
 						slot = available;
-						
-						
-					} catch (UngroundedException e) {
-						e.printStackTrace();
-					} catch (CodecException e) {
-						e.printStackTrace();
-					} catch (OntologyException e) {
-						e.printStackTrace();
-					}
-					*/
-					if(slot >= 0) {
-						reply.setPerformative(ACLMessage.INFORM);
-						reply.setContent(Integer.toString(++slot));
-						System.out.println("inform! " + slot);
-					} else {
-						System.out.println("REFUSE!");
-						reply.setPerformative(ACLMessage.REFUSE);
+						/*
+						try {
+							ContentElement content = getContentManager().extractContent(msg);
+							takenSlots[--available] = msg.getSender();
+							slot = available;
+							
+							
+						} catch (UngroundedException e) {
+							e.printStackTrace();
+						} catch (CodecException e) {
+							e.printStackTrace();
+						} catch (OntologyException e) {
+							e.printStackTrace();
+						}
+						*/
+						if(slot >= 0) {
+							reply.setPerformative(ACLMessage.INFORM);
+							reply.setContent(Integer.toString(++slot));
+							System.out.println("inform! " + slot);
+						} else {
+							System.out.println("REFUSE!");
+							reply.setPerformative(ACLMessage.REFUSE);
+						}
 					}
 				}
 				send(reply);

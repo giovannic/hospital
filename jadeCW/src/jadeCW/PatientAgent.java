@@ -22,6 +22,7 @@ public class PatientAgent extends Agent {
 	Appointment allocation;
 	Preferences preferences;
 	protected boolean finished = false;
+	AID agentWithPreferred = null;
 	
 	protected void setup() {
 		preferences = Preferences.parsePreferences(getArguments()[0].toString());
@@ -107,13 +108,13 @@ public class PatientAgent extends Agent {
 			}
 			
 			//set content
-			Available f = new Available();
-			Appointment a = new Appointment();
-			a.setNumber(preferences.getBestPreferences().iterator().next());
-			f.setAppointment(a);
+//			Available f = new Available();
+//			Appointment a = new Appointment();
+//			a.setNumber(preferences.getBestPreferences().iterator().next());
+//			f.setAppointment(a);
 			
 			try {
-    			myAgent.getContentManager().fillContent(requestMsg, f);
+				requestMsg.setContent(HospitalAgent.NEW_APP);
 			} catch (Exception pe) {
 				pe.printStackTrace();
 			}
@@ -141,5 +142,73 @@ public class PatientAgent extends Agent {
 			return finished;
 		}
 
+	}
+	
+	public class FindAppointmentOwner extends Behaviour {
+
+		ACLMessage requestMsg;
+		
+		public FindAppointmentOwner(Agent patientAgent) {
+			super(patientAgent);
+			// Create an ACL message for hospital
+			requestMsg = new ACLMessage(ACLMessage.REQUEST);
+			requestMsg.addReceiver(provider);
+			requestMsg.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
+			requestMsg.setOntology(AppointmentOntology.NAME);
+			requestMsg.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
+			
+		}
+
+
+
+		@Override
+		public void action() {
+			
+			//only request if appointment is allocated
+			if(allocation == null){
+				return;
+			}
+			//if there is no provider, return
+			if(provider == null){
+				return;
+			}
+			
+			Integer appointment = allocation.getNumber();
+			
+			if(preferences.getBestPreferences().contains(appointment)) {
+				//already have best, do nothing
+				return;
+			} else {
+				
+				try {
+					requestMsg.setContent(HospitalAgent.FIND_OWNER);
+				} catch (Exception pe) {
+					pe.printStackTrace();
+				}
+				
+				//add response behaviour
+				addBehaviour(new SimpleAchieveREInitiator(myAgent, requestMsg) {
+					protected void handleInform(ACLMessage msg) {
+						System.out.println("Engagement successfully completed");
+						allocation = new Appointment();
+						allocation.setNumber(Integer.parseInt(msg.getContent()));
+					}
+					protected void handleRefuse(ACLMessage msg) {
+						System.out.println("Engagement refused");
+						
+					}
+				});
+				
+				finished = true;
+			}
+		}
+		
+		
+
+		@Override
+		public boolean done() {
+			return finished;
+		}
+		
 	}
 }
