@@ -1,5 +1,7 @@
 package jadeCW;
 
+import java.util.Set;
+
 import jade.content.ContentElement;
 import jade.content.Predicate;
 import jade.content.lang.Codec.CodecException;
@@ -128,6 +130,7 @@ public class PatientAgent extends Agent {
 					try {
 						Available content = (Available) getContentManager().extractContent(msg);
 						allocation = content.getAppointment();
+						myAgent.addBehaviour(new FindAppointmentOwner(myAgent));
 						return;
 					} catch (UngroundedException e) {
 						e.printStackTrace();
@@ -154,12 +157,13 @@ public class PatientAgent extends Agent {
 		public boolean done() {
 			return finished;
 		}
-
+	
 	}
 	
 	public class FindAppointmentOwner extends Behaviour {
 
 		ACLMessage requestMsg;
+		Set<Integer> best;
 		
 		public FindAppointmentOwner(Agent patientAgent) {
 			super(patientAgent);
@@ -169,16 +173,18 @@ public class PatientAgent extends Agent {
 			requestMsg.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
 			requestMsg.setOntology(AppointmentOntology.NAME);
 			requestMsg.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
-			
+			best = preferences.getBestPreferences();
+			System.out.println("find appt owner constructed");
 		}
 
 
 
 		@Override
 		public void action() {
-			
+			System.out.println("actio fao 1");
 			//only request if appointment is allocated
 			if(allocation == null){
+				System.out.println("allocation null");
 				return;
 			}
 			//if there is no provider, return
@@ -188,13 +194,22 @@ public class PatientAgent extends Agent {
 			
 			Integer appointment = allocation.getNumber();
 			
-			if(preferences.getBestPreferences().contains(appointment)) {
+			if(best.contains(appointment)) {
 				//already have best, do nothing
 				return;
 			} else {
 				
+				System.out.println("action FAO");
+
+				
+				FindOwner act = new FindOwner();
+				Appointment idealAppt = new Appointment();
+				Integer[] a = new Integer[best.size()];
+				Integer[] bestArr = (Integer[]) best.toArray(a);
+				idealAppt.setNumber(bestArr[0]);
+				act.setAppointment(idealAppt);
 				try {
-					requestMsg.setContent(HospitalAgent.FIND_OWNER);
+					getContentManager().fillContent(requestMsg, new Action(provider, act));
 				} catch (Exception pe) {
 					pe.printStackTrace();
 				}
@@ -202,9 +217,21 @@ public class PatientAgent extends Agent {
 				//add response behaviour
 				addBehaviour(new SimpleAchieveREInitiator(myAgent, requestMsg) {
 					protected void handleInform(ACLMessage msg) {
-						System.out.println("Engagement successfully completed");
-						allocation = new Appointment();
-						allocation.setNumber(Integer.parseInt(msg.getContent()));
+						try {
+							IsOwned content = (IsOwned) getContentManager().extractContent(msg);
+							String owner = content.getOwner().getPatient();
+							agentWithPreferred = new AID(owner, true);
+							System.out.println("agent with preferred appt: " + agentWithPreferred.getLocalName());
+						} catch (UngroundedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (CodecException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (OntologyException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 					protected void handleRefuse(ACLMessage msg) {
 						System.out.println("Engagement refused");

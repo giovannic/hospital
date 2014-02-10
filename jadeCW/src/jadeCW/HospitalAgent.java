@@ -82,6 +82,7 @@ public class HospitalAgent extends Agent {
 				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
 				ACLMessage reply = msg.createReply();
 				reply.addReceiver(msg.getSender());
+				reply.setPerformative(ACLMessage.REFUSE);
 				ContentElement content;
 				try {
 					content = getContentManager().extractContent(msg);
