@@ -2,6 +2,7 @@ package jadeCW;
 
 import jade.content.Predicate;
 
+@SuppressWarnings("serial")
 public class Available implements Predicate {
 	private Appointment _appointment;
 
