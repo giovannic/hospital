@@ -28,4 +28,24 @@ public class Preferences {
 	public Set<Integer> getBestPreferences(){
 		return preferences.iterator().next();
 	}
+	
+	/**
+	 * 
+	 * @param compare integer to compare
+	 * @param owned the integer owned 
+	 * @return true iff @param{compare} is at least equally as desirable
+	 * as the second argument 
+	 */
+	public boolean isPreferable(Integer compare, Integer owned) {
+		for(Set<Integer> layer : preferences) {
+			if(layer.contains(compare)) {
+				return true;
+			} if(layer.contains(owned)) {
+				return false;
+			}
+		}
+		//neither compare nor owned is in preferred
+		return false;
+		
+	}
 }

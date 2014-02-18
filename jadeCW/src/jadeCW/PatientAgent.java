@@ -2,6 +2,7 @@ package jadeCW;
 
 import java.util.Set;
 
+import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.Predicate;
 import jade.content.lang.Codec.CodecException;
@@ -13,6 +14,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.ServiceException;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.messaging.TopicManagementHelper;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -359,4 +361,80 @@ public class PatientAgent extends Agent {
 		
 		
 	}
+	
+	
+	public class RespondToProposal1 extends CyclicBehaviour {
+		
+		public RespondToProposal1(Agent patientAgent) {
+			super(patientAgent);
+		}
+		
+		@Override
+		public void action() {
+			ACLMessage msg = receive();
+			
+			if(msg != null) {
+				//only request if appointment is allocated
+				if(allocation == null){
+					System.out.println("allocation null");
+					//TODO send reject
+				}
+				ACLMessage reply = msg.createReply();
+				reply.addReceiver(msg.getSender());
+
+				reply.setPerformative(ACLMessage.REFUSE);
+				ContentElement content;
+				try {
+					content = getContentManager().extractContent(msg);
+					Concept action = ((Action)content).getAction();
+					if(action instanceof PatientRequestSwap) {
+						if(!((PatientRequestSwap) action).getRequestedAppointment().equals(allocation)) {
+							System.err.println("WRONG!!! incorrect appointment sent");
+							reply.setPerformative(ACLMessage.REFUSE);
+							System.err.println("requested appointment " + ((PatientRequestSwap) action).getRequestedAppointment().getNumber()
+									+ ". actual appointment owned is " + allocation.getNumber());
+						} else if(!isAsDesirable(((PatientRequestSwap) action).getCurrentAppointment())){
+							reply.setPerformative(ACLMessage.REFUSE);
+							System.err.println("requested appointment " + ((PatientRequestSwap) action).getRequestedAppointment().getNumber()
+									+ " isn't as desirable as " + allocation.getNumber());
+						} else {
+							reply.setPerformative(ACLMessage.INFORM);
+							Appointment toSend = allocation;
+							allocation = ((PatientRequestSwap) action).getCurrentAppointment();
+							Owner owner = new Owner(getAID());
+							IsOwned isOwned = new IsOwned(toSend, owner);
+							getContentManager().fillContent(reply, isOwned);
+							ACLMessage hospitalInfMsg = new ACLMessage(ACLMessage.INFORM);
+							hospitalInfMsg.addReceiver(provider);
+							hospitalInfMsg.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
+							hospitalInfMsg.setOntology(AppointmentOntology.NAME);
+							hospitalInfMsg.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
+							HospitalSwapInform hsi = new HospitalSwapInform();
+							hsi.setCurrentlyOwned(toSend);
+							hsi.setNewAppointment(allocation);
+							getContentManager().fillContent(hospitalInfMsg, hsi);
+						}
+						send(reply);
+					}
+				} catch (UngroundedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (CodecException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+		}
+
+		private boolean isAsDesirable(Appointment toCompare) {
+			return preferences.isPreferable(toCompare.getNumber(), allocation.getNumber());
+		}
+		
+		
+	}
+
 }
