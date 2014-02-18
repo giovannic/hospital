@@ -317,22 +317,27 @@ public class PatientAgent extends Agent {
 							// Extract new appointment
 							IsOwned content = (IsOwned) getContentManager().extractContent(msg);
 							Appointment newApp = content.getAppointment();
-							System.out.println("Swap confirmed. Informing hospital ...");
-							// Construct inform message for hospital
-							HospitalSwapInform informAct = new HospitalSwapInform();
-							informAct.setCurrentlyOwned(allocation);
-							informAct.setNewAppointment(newApp);
-							ACLMessage hospInform = new ACLMessage(ACLMessage.INFORM);
-							hospInform.addReceiver(provider);
-							hospInform.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
-							hospInform.setOntology(AppointmentOntology.NAME);
-							hospInform.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
-							getContentManager().fillContent(hospInform, new Action(provider, informAct));
+							System.out.println("Swap confirmed.");
 							
-							// Send inform message
-							send(hospInform);					
+							if(!agentWithPreferred.equals(provider)){
+								System.out.println("Informing hospital");
+								// Construct inform message for hospital
+								HospitalSwapInform informAct = new HospitalSwapInform();
+								informAct.setCurrentlyOwned(allocation);
+								informAct.setNewAppointment(newApp);
+								ACLMessage hospInform = new ACLMessage(ACLMessage.INFORM);
+								hospInform.addReceiver(provider);
+								hospInform.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
+								hospInform.setOntology(AppointmentOntology.NAME);
+								hospInform.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
+								getContentManager().fillContent(hospInform, new Action(provider, informAct));
+								
+								// Send inform message
+								send(hospInform);
+							}
 							
 							// Set our allocation to the new appointment
+							System.out.println("Our appointment is now " + newApp.getNumber());
 							allocation = newApp;
 							
 						} catch (UngroundedException e) {

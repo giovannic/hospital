@@ -170,20 +170,27 @@ public class HospitalAgent extends Agent {
 					Appointment a = action.getAppointment();
 					int wanted = a.getNumber()-1;
 					AID agentOwner = takenSlots[wanted];
-					if( agentOwner == null) {
-						//not assigned
-						System.out.println("No patient assigned appointment: " +
-								wanted+1);
-						reply.setPerformative(ACLMessage.REFUSE);
-					} else if (wanted < 0 || wanted > takenSlots.length){
+					if (wanted < 0 || wanted > takenSlots.length){
 						//appointment not in range
 						System.out.println("Invalid appointment: " +
 								(wanted+1));
 						reply.setPerformative(ACLMessage.REFUSE);
 						
-					} else { // appt found
+					} 
+					else  { // appt found
 						reply.setPerformative(ACLMessage.INFORM);
-						Owner owner = new Owner(agentOwner);
+						Owner owner = null;
+						
+						if( agentOwner == null) {
+							//not assigned
+							System.out.println("No patient assigned appointment: " +
+									wanted+1);
+							owner = new Owner(getAID());
+						}
+						else{
+							owner =	new Owner(agentOwner);
+						}
+						
 						Appointment appt = new Appointment();
 						appt.setNumber(wanted);
 						IsOwned isOwned = new IsOwned(appt, owner);
@@ -279,14 +286,14 @@ public class HospitalAgent extends Agent {
 					int requested = action.getNewAppointment().getNumber();
 					Pair pair = new Pair(current, requested);
 					System.out.println("Hospital receieved swap request for apps: " + current + " " + requested);
-					
+
 					// Check if other agent in swap has already informed
 					if(swapRequests.contains(pair)){
 						// If so, remove from swapRequests and swap values in takeSlots
 						swapRequests.remove(pair);
-						AID temp = takenSlots[current];
-						takenSlots[current] = takenSlots[requested];
-						takenSlots[requested] = temp;
+						AID temp = takenSlots[current-1];
+						takenSlots[current-1] = takenSlots[requested-1];
+						takenSlots[requested-1] = temp;
 						System.out.println("Hospital - " + current + " and " + requested + " swapped!");
 					}
 					else{
