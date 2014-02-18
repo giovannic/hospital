@@ -61,10 +61,10 @@ public class AppointmentOntology extends Ontology {
 			prs.add(CURRENT_APPOINTMENT, csApp, ObjectSchema.MANDATORY);
 			prs.add(REQUESTED_APPOINTMENT, csApp, ObjectSchema.MANDATORY);
 			
-			add(new AgentActionSchema(HOSPITAL_SWAP_INFORM), HospitalSwapInform.class);
-			AgentActionSchema hsi = (AgentActionSchema) getSchema(HOSPITAL_SWAP_INFORM);
-			hsi.add(CURRENTLY_OWNED, csApp, ObjectSchema.MANDATORY);
-			hsi.add(NEW_APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			add(new PredicateSchema(HOSPITAL_SWAP_INFORM), HospitalSwapInform.class);
+			PredicateSchema psHSI = (PredicateSchema) getSchema(HOSPITAL_SWAP_INFORM);
+			psHSI.add(CURRENTLY_OWNED, (ConceptSchema) getSchema(APPOINTMENT));
+			psHSI.add(NEW_APPOINTMENT, (ConceptSchema) getSchema(APPOINTMENT));
 			
 			
 			add(new PredicateSchema(AVAILABLE), Available.class);

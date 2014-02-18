@@ -69,8 +69,7 @@ public class AppointmentMessageMatcher {
 			public boolean match(ACLMessage arg0) {
 				try {
 					ContentElement content = myAgent.getContentManager().extractContent(arg0);
-					Concept action = ((Action)content).getAction();
-					return (action instanceof HospitalSwapInform);
+					return (content instanceof HospitalSwapInform);
 				} catch (UngroundedException e) {
 					e.printStackTrace();
 				} catch (CodecException e) {

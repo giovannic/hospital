@@ -1,8 +1,8 @@
 package jadeCW;
 
-import jade.content.AgentAction;
+import jade.content.Predicate;
 
-public class HospitalSwapInform implements AgentAction{
+public class HospitalSwapInform implements Predicate{
 	
 	private Appointment currentlyOwned;
 	private Appointment newAppointment;

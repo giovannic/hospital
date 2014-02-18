@@ -6,8 +6,8 @@ public class Pair {
 	private int b;
 	
 	public Pair(int a, int b){
-		this.a = a;
-		this.b = b;
+		this.a = Math.min(a, b);
+		this.b = Math.max(a, b);
 	}
 	
 	public int getB() {
@@ -20,16 +20,18 @@ public class Pair {
 	
 	@Override
 	public boolean equals(Object p) {
-		
 		if(!(p instanceof Pair)){
 			return false;
 		}
 		else{
-			return ((((Pair) p).getA() == this.a) && (((Pair) p).getB() == this.b))
-					|| ((((Pair) p).getA() == this.b) && (((Pair) p).getB() == this.a));
+			return ((Pair) p).a == a && ((Pair) p).b == b; 
 		}
 		
 	}
+	
+	public int hashCode() {
+        return (a*2)+(b*3);
+    }
 	
 	
 

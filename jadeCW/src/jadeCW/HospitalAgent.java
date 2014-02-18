@@ -1,6 +1,7 @@
 package jadeCW;
 
 
+import java.util.HashSet;
 import java.util.Set;
 
 import jade.content.Concept;
@@ -41,8 +42,11 @@ public class HospitalAgent extends Agent {
 		int appts = Integer.parseInt(getArguments()[0].toString());
 		available = appts;
 		takenSlots = new AID[appts];
+		swapRequests = new HashSet<Pair>();
 		addBehaviour(new AllocateAppointment(this));
 		addBehaviour(new RespondToQuery(this));
+		addBehaviour(new RespondToProposal2(this));
+		addBehaviour(new UpdateAppointments(this));
 		registerAppointmentAgent("Hospital");
 		
 	}
@@ -108,8 +112,14 @@ public class HospitalAgent extends Agent {
 						}
 						else {
 							int slot = -1;
-							takenSlots[--available] = msg.getSender();
-							slot = available;
+							--available;
+							for(int i = 0; i < takenSlots.length; i++) {
+								if(takenSlots[i] == null) {
+									takenSlots[i] = msg.getSender();
+									slot = i;
+									break;
+								}
+							}
 							if(slot >= 0) {
 								reply.setPerformative(ACLMessage.INFORM);
 								Available av = new Available();
@@ -185,7 +195,7 @@ public class HospitalAgent extends Agent {
 						if( agentOwner == null) {
 							//not assigned
 							System.out.println("No patient assigned appointment: " +
-									wanted+1);
+									(wanted+1));
 							owner = new Owner(getAID());
 						}
 						else{
@@ -193,7 +203,7 @@ public class HospitalAgent extends Agent {
 						}
 						
 						Appointment appt = new Appointment();
-						appt.setNumber(wanted);
+						appt.setNumber(wanted+1);
 						IsOwned isOwned = new IsOwned(appt, owner);
 						getContentManager().fillContent(reply, isOwned);
 						System.out.println("Preferred appointment " + (wanted+1) + 
@@ -208,7 +218,6 @@ public class HospitalAgent extends Agent {
 				} catch (OntologyException e) {
 					e.printStackTrace();
 				}
-				
 				send(reply);
 			} else {
 				block();
@@ -279,14 +288,13 @@ public class HospitalAgent extends Agent {
 			
 			if(msg != null) {
 				try {
-					ContentElement content = (ContentElement)myAgent.getContentManager().extractContent(msg);
-					HospitalSwapInform action = (HospitalSwapInform) ((Action)content).getAction();
+					HospitalSwapInform content = (HospitalSwapInform)myAgent.getContentManager().extractContent(msg);
 					
 					// Get appointments to be swapped
-					int current = action.getCurrentlyOwned().getNumber();
-					int requested = action.getNewAppointment().getNumber();
+					int current = content.getCurrentlyOwned().getNumber();
+					int requested = content.getNewAppointment().getNumber();
 					Pair pair = new Pair(current, requested);
-					System.out.println("Hospital receieved swap request for apps: " + current + " " + requested);
+					System.out.println("Hospital receieved swap request for apps: " + current + " " + requested + "from " + msg.getSender().getLocalName());
 
 					// Check if other agent in swap has already informed
 					if(swapRequests.contains(pair)){
@@ -295,10 +303,11 @@ public class HospitalAgent extends Agent {
 						AID temp = takenSlots[current-1];
 						takenSlots[current-1] = takenSlots[requested-1];
 						takenSlots[requested-1] = temp;
-						System.out.println("Hospital - " + current + " and " + requested + " swapped!");
+						System.out.println("Hospital - " + current + " and " + requested + " swapped for " + msg.getSender().getLocalName());
 					}
 					else{
 						// else add to swapRequests and wait for message from other agent in swap
+						System.out.println("Hospital adding pair: " + current + " " + requested);
 						swapRequests.add(pair);
 					}
 					
