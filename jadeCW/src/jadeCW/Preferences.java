@@ -1,6 +1,8 @@
 package jadeCW;
 
+
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -8,6 +10,9 @@ import java.util.Set;
 public class Preferences {
 	
 	List<Set<Integer>> preferences;
+	Iterator<Set<Integer>> group;
+	Iterator<Integer> current;
+	private int next;
 	
 	//factory method for preferences
 	public static Preferences parsePreferences(String input){
@@ -22,6 +27,12 @@ public class Preferences {
 		
 		Preferences p = new Preferences();
 		p.preferences = preferences;
+		p.group = p.preferences.iterator();
+		if(p.group.hasNext()){
+			p.current = p.group.next().iterator();
+		} else {
+			//pre: always preferences
+		}
 		return p;
 	}
 	
@@ -29,6 +40,29 @@ public class Preferences {
 		return preferences.iterator().next();
 	}
 	
+	public int getNextPreference(){
+		if (current.hasNext()){
+			next = current.next();
+		} else {
+			if(group.hasNext()){
+				current = group.next().iterator();
+				next = getNextPreference();
+			} else {
+				return -1;
+			}
+		}
+		System.err.println(next);
+		return next;
+	}
+	
+	public void resetIterators(){
+		group = preferences.iterator();
+		if(group.hasNext()){
+			current = group.next().iterator();
+		} else {
+			//pre: always preferences
+		}
+	}
 	/**
 	 * 
 	 * @param compare integer to compare
@@ -47,5 +81,17 @@ public class Preferences {
 		//neither compare nor owned is in preferred
 		return false;
 		
+	}
+
+	public boolean worseThan(int whatWeHave) {
+		for(Set<Integer> g : preferences){
+			if (g.contains(whatWeHave)){
+				return true;
+			} else if (g.contains(next)) {
+				return false;
+			}
+		}
+		//shouldn't get to the end
+		return true;
 	}
 }

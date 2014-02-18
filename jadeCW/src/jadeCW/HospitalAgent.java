@@ -249,7 +249,7 @@ public class HospitalAgent extends Agent {
 					if(action instanceof PatientRequestSwap) {
 						Appointment requested = ((PatientRequestSwap) action).getRequestedAppointment();
 						if(isTaken(requested)) {
-							System.err.println("WRONG!!! appointment " + requested.getNumber() + " is owned");
+							System.out.println(getLocalName() + ": Appointment " + requested.getNumber() + " is already owned");
 							reply.setPerformative(ACLMessage.REFUSE);
 						} else {
 							int current = ((PatientRequestSwap) action).getCurrentAppointment().getNumber();

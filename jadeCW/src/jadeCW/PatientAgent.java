@@ -83,7 +83,7 @@ public class PatientAgent extends Agent {
 					DFAgentDescription[] results = DFService
 							.decodeNotification(inform.getContent());
 					if (results.length != 1) {
-						System.err.print(getLocalName() +": Multiple hospitals detected");
+						System.out.print(getLocalName() +": Multiple hospitals detected");
 					} else {
 						setProvider(results[0].getName());
 						myAgent.addBehaviour(new RequestAppointment(myAgent));
@@ -206,7 +206,7 @@ public class PatientAgent extends Agent {
 		public void action() {
 			//only request if appointment is allocated
 			if(allocation == null){
-				System.err.println(getLocalName() + ": Allocation null. Detected in FindAppointmentOwner");
+				System.out.println(getLocalName() + ": Allocation null. Detected in FindAppointmentOwner");
 				return;
 			}
 			//if there is no provider, return
@@ -292,7 +292,7 @@ public class PatientAgent extends Agent {
 			
 			//only request if appointment is allocated
 			if(allocation == null){
-				System.err.println(getLocalName() + ": Allocation null in ProposeSwap");
+				System.out.println(getLocalName() + ": Allocation null in ProposeSwap");
 				return;
 			}
 			//if there is no partner, return
@@ -368,7 +368,15 @@ public class PatientAgent extends Agent {
 					}
 
 					protected void handleRefuse(ACLMessage msg) {
-						System.out.println(getLocalName() + ": Swap request refused");						
+						System.out.println(getLocalName() + ": Swap request refused");
+						int nextPreference = preferences.getNextPreference();
+						if(nextPreference <= 0 || preferences.worseThan(allocation.getNumber())){
+							return;
+						}
+						Appointment a = new Appointment();
+						a.setNumber(nextPreference);
+						preferredApp = a;
+						myAgent.addBehaviour(new FindAppointmentOwner(myAgent));
 					}
 				});
 				
@@ -403,7 +411,7 @@ public class PatientAgent extends Agent {
 			if(msg != null) {
 				//only request if appointment is allocated
 				if(allocation == null){
-					System.err.println(getLocalName() + ": Allocation null in RespondToProposal1");
+					System.out.println(getLocalName() + ": Allocation null in RespondToProposal1");
 					ACLMessage rejection = msg.createReply();
 					rejection.setPerformative(ACLMessage.REFUSE);
 					send(rejection);
@@ -444,13 +452,13 @@ public class PatientAgent extends Agent {
 
 		reply.setPerformative(ACLMessage.REFUSE);
 		if(!action.getRequestedAppointment().equals(allocation)) {
-			System.err.println(getLocalName() +": WRONG!!! incorrect appointment sent");
+			System.out.println(getLocalName() +": WRONG!!! incorrect appointment sent");
 			reply.setPerformative(ACLMessage.REFUSE);
-			System.err.println(getLocalName() +": Requested appointment " + action.getRequestedAppointment().getNumber()
+			System.out.println(getLocalName() +": Requested appointment " + action.getRequestedAppointment().getNumber()
 					+ ". actual appointment owned is " + allocation.getNumber());
 		} else if(!isAsDesirable(action.getCurrentAppointment())){
 			reply.setPerformative(ACLMessage.REFUSE);
-			System.err.println("Requested appointment " + action.getCurrentAppointment().getNumber()
+			System.out.println(getLocalName() +": Requested appointment " + action.getCurrentAppointment().getNumber()
 					+ " isn't as desirable as " + allocation.getNumber());
 		} else {
 			reply.setPerformative(ACLMessage.INFORM);
