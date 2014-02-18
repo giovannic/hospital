@@ -1,6 +1,8 @@
 package jadeCW;
 
 
+import java.util.Set;
+
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec.CodecException;
@@ -24,6 +26,7 @@ public class HospitalAgent extends Agent {
 	
 	private int available;
 	private AID[] takenSlots;
+	private Set<Pair> swapRequests;
 
 	//Constants
 	public static final String NEW_APP = "NEW_APP";
@@ -205,4 +208,58 @@ public class HospitalAgent extends Agent {
 			
 		}	
 	}
+	
+	public class UpdateAppointments extends CyclicBehaviour {
+		
+		public UpdateAppointments(Agent agent){
+			super(agent); 
+		}
+
+		@Override
+		public void action() {
+			//receive only owner requests
+			ACLMessage msg = receive(messageMatcher.SwapInform);
+			
+			if(msg != null) {
+				try {
+					ContentElement content = (ContentElement)myAgent.getContentManager().extractContent(msg);
+					HospitalSwapInform action = (HospitalSwapInform) ((Action)content).getAction();
+					
+					// Get appointments to be swapped
+					int current = action.getCurrentlyOwned().getNumber();
+					int requested = action.getNewAppointment().getNumber();
+					Pair pair = new Pair(current, requested);
+					System.out.println("Hospital receieved swap request for apps: " + current + " " + requested);
+					
+					// Check if other agent in swap has already informed
+					if(swapRequests.contains(pair)){
+						// If so, remove from swapRequests and swap values in takeSlots
+						swapRequests.remove(pair);
+						AID temp = takenSlots[current];
+						takenSlots[current] = takenSlots[requested];
+						takenSlots[requested] = temp;
+						System.out.println("Hospital - " + current + " and " + requested + " swapped!");
+					}
+					else{
+						// else add to swapRequests and wait for message from other agent in swap
+						swapRequests.add(pair);
+					}
+					
+					
+				} catch (UngroundedException e) {
+					e.printStackTrace();
+				} catch (CodecException e) {
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					e.printStackTrace();
+				}
+				
+			} else {
+				block();
+			}
+			
+		}
+		
+	}
+	
 }

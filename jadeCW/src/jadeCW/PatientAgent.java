@@ -229,9 +229,8 @@ public class PatientAgent extends Agent {
 						try {
 							IsOwned content = (IsOwned) getContentManager().extractContent(msg);
 							String owner = content.getOwner().getPatient();
-							Appointment app = content.getAppointment();
+							preferredApp = content.getAppointment();
 							agentWithPreferred = new AID(owner, true);
-							preferredApp = app;
 							System.out.println("agent with preferred appt: " + agentWithPreferred.getLocalName());
 						} catch (UngroundedException e) {
 							e.printStackTrace();
@@ -303,6 +302,7 @@ public class PatientAgent extends Agent {
 				PatientRequestSwap act = new PatientRequestSwap();
 				act.setCurrentAppointment(allocation);
 				act.setRequestedAppointment(preferredApp);
+				System.out.println("Proposing swap with agent " + agentWithPreferred);
 				
 				try {
 					getContentManager().fillContent(proposeMsg, new Action(agentWithPreferred, act));
@@ -317,7 +317,7 @@ public class PatientAgent extends Agent {
 							// Extract new appointment
 							IsOwned content = (IsOwned) getContentManager().extractContent(msg);
 							Appointment newApp = content.getAppointment();
-							
+							System.out.println("Swap confirmed. Informing hospital ...");
 							// Construct inform message for hospital
 							HospitalSwapInform informAct = new HospitalSwapInform();
 							informAct.setCurrentlyOwned(allocation);
