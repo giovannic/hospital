@@ -169,15 +169,16 @@ public class HospitalAgent extends Agent {
 					FindOwner action = (FindOwner) ((Action)content).getAction();
 					Appointment a = action.getAppointment();
 					int wanted = a.getNumber()-1;
-					AID agentOwner = takenSlots[wanted];
-					if (wanted < 0 || wanted > takenSlots.length){
+					
+					if (wanted < 0 || wanted >= takenSlots.length){
 						//appointment not in range
 						System.out.println("Invalid appointment: " +
 								(wanted+1));
 						reply.setPerformative(ACLMessage.REFUSE);
 						
-					} 
+					}					 
 					else  { // appt found
+						AID agentOwner = takenSlots[wanted];
 						reply.setPerformative(ACLMessage.INFORM);
 						Owner owner = null;
 						
