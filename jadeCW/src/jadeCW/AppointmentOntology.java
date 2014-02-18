@@ -15,9 +15,13 @@ public class AppointmentOntology extends Ontology {
 	// Concepts
 	public static final String APPOINTMENT = "Appointment";
 	public static final String APPOINTMENT_NUMBER = "number";
+	public static final String CURRENT_APPOINTMENT = "CurrentAppointment";
+	public static final String REQUESTED_APPOINTMENT = "RequestedAppointment";
+	public static final String CURRENTLY_OWNED = "CurrentlyOwned";
+	public static final String NEW_APPOINTMENT = "NewAppointment";
 	
 	public static final String OWNER = "Owner";
-	public static final String PATIENT = "patient";
+	public static final String PATIENT = "Patient";
 
 	//Predicates
 	public static final String AVAILABLE = "Available";
@@ -54,13 +58,13 @@ public class AppointmentOntology extends Ontology {
 			
 			add(new AgentActionSchema(PATIENT_REQUEST_SWAP), PatientRequestSwap.class);
 			AgentActionSchema prs = (AgentActionSchema) getSchema(PATIENT_REQUEST_SWAP);
-			prs.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
-			prs.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			prs.add(CURRENT_APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			prs.add(REQUESTED_APPOINTMENT, csApp, ObjectSchema.MANDATORY);
 			
 			add(new AgentActionSchema(HOSPITAL_SWAP_INFORM), HospitalSwapInform.class);
 			AgentActionSchema hsi = (AgentActionSchema) getSchema(HOSPITAL_SWAP_INFORM);
-			hsi.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
-			hsi.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			hsi.add(CURRENTLY_OWNED, csApp, ObjectSchema.MANDATORY);
+			hsi.add(NEW_APPOINTMENT, csApp, ObjectSchema.MANDATORY);
 			
 			
 			add(new PredicateSchema(AVAILABLE), Available.class);
