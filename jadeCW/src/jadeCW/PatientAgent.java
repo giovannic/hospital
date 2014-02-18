@@ -33,6 +33,7 @@ public class PatientAgent extends Agent {
 	Preferences preferences;
 	protected boolean finished = false;
 	AID agentWithPreferred = null;
+	Appointment preferredApp;
 	
 	//topics
 	AID obtainRequest;
@@ -226,7 +227,9 @@ public class PatientAgent extends Agent {
 						try {
 							IsOwned content = (IsOwned) getContentManager().extractContent(msg);
 							String owner = content.getOwner().getPatient();
+							Appointment app = content.getAppointment();
 							agentWithPreferred = new AID(owner, true);
+							preferredApp = app;
 							System.out.println("agent with preferred appt: " + agentWithPreferred.getLocalName());
 						} catch (UngroundedException e) {
 							e.printStackTrace();
@@ -267,11 +270,11 @@ public class PatientAgent extends Agent {
 			super(patientAgent);
 			// Create an ACL message for hospital
 			proposeMsg = new ACLMessage(ACLMessage.REQUEST);
-			proposeMsg.addReceiver(provider);
+			proposeMsg.addReceiver(agentWithPreferred);
 			proposeMsg.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
 			proposeMsg.setOntology(AppointmentOntology.NAME);
 			proposeMsg.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
-			AID partner = agentWithPreferred; 
+			
 			best = preferences.getBestPreferences();
 			System.out.println("Request Swap Constructed");
 		}
@@ -284,23 +287,23 @@ public class PatientAgent extends Agent {
 				System.out.println("allocation null");
 				return;
 			}
-			//if there is no provider, return
-			if(provider == null){
+			//if there is no partner, return
+			if(agentWithPreferred == null){
 				return;
 			}
 			
 			Integer appointment = allocation.getNumber();
 			
 			if(best.contains(appointment)) {
-				//already have best, do nothing (superfluous?)
 				return;
 			} else {
 				
 				PatientRequestSwap act = new PatientRequestSwap();
-				act.setAppointment(allocation);
+				act.setCurrentAppointment(allocation);
+				act.setRequestedAppointment(preferredApp);
 				
 				try {
-					getContentManager().fillContent(proposeMsg, new Action(provider, act));
+					getContentManager().fillContent(proposeMsg, new Action(agentWithPreferred, act));
 				} catch (Exception pe) {
 					pe.printStackTrace();
 				}
@@ -309,11 +312,25 @@ public class PatientAgent extends Agent {
 				addBehaviour(new SimpleAchieveREInitiator(myAgent, proposeMsg) {
 					protected void handleInform(ACLMessage msg) {
 						try {
+							// Extract new appointment
 							IsOwned content = (IsOwned) getContentManager().extractContent(msg);
 							Appointment newApp = content.getAppointment();
 							
-							// TODO MUST INFORM HOSPITAL!!!!!!!!!!
+							// Construct inform message for hospital
+							HospitalSwapInform informAct = new HospitalSwapInform();
+							informAct.setCurrentlyOwned(allocation);
+							informAct.setNewAppointment(newApp);
+							ACLMessage hospInform = new ACLMessage(ACLMessage.INFORM);
+							hospInform.addReceiver(provider);
+							hospInform.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
+							hospInform.setOntology(AppointmentOntology.NAME);
+							hospInform.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
+							getContentManager().fillContent(hospInform, new Action(provider, informAct));
 							
+							// Send inform message
+							send(hospInform);					
+							
+							// Set our allocation to the new appointment
 							allocation = newApp;
 							
 						} catch (UngroundedException e) {
@@ -325,7 +342,7 @@ public class PatientAgent extends Agent {
 						}
 					}
 					protected void handleRefuse(ACLMessage msg) {
-						System.out.println("Engagement refused");						
+						System.out.println("Swap request refused");						
 					}
 				});
 				
