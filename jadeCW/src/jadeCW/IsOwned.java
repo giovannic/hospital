@@ -11,6 +11,10 @@ public class IsOwned implements Predicate {
 		this.owner = owner;
 	}
 	
+	public IsOwned() {
+		super();
+	}
+	
 	public Appointment getAppointment() {
 		return appointment;
 	}

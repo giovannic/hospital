@@ -6,6 +6,10 @@ import jade.core.AID;
 public class Owner implements Concept {
 	private String patient;
 	
+	public Owner() {
+		super();
+	}
+	
 	public Owner(String patient) {
 		this.patient = patient;
 	}
