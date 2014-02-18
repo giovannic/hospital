@@ -26,6 +26,8 @@ public class AppointmentOntology extends Ontology {
 	//Actions
 	public static final String ASSIGN_APPOINTMENT = "AssignAppointment";
 	public static final String FIND_OWNER = "FindOwner";
+	public static final String PATIENT_REQUEST_SWAP = "PatientRequestSwap";
+	public static final String HOSPITAL_SWAP_INFORM = "HospitalSwapInform";
 
 	private static Ontology theInstance = new AppointmentOntology();
 	public static String NAME = "appointment-ontology";
@@ -43,11 +45,23 @@ public class AppointmentOntology extends Ontology {
 			csApp.add(APPOINTMENT_NUMBER, (PrimitiveSchema) getSchema(BasicOntology.INTEGER), 
 					ObjectSchema.MANDATORY);
 			
+			// Add action schemas
 			add(new AgentActionSchema(ASSIGN_APPOINTMENT), AssignAppointment.class);
+			
 			add(new AgentActionSchema(FIND_OWNER), FindOwner.class);
 			AgentActionSchema fo = (AgentActionSchema) getSchema(FIND_OWNER);
-			fo.add(APPOINTMENT, 
-					csApp, ObjectSchema.MANDATORY);
+			fo.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			
+			add(new AgentActionSchema(PATIENT_REQUEST_SWAP), PatientRequestSwap.class);
+			AgentActionSchema prs = (AgentActionSchema) getSchema(PATIENT_REQUEST_SWAP);
+			prs.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			prs.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			
+			add(new AgentActionSchema(HOSPITAL_SWAP_INFORM), HospitalSwapInform.class);
+			AgentActionSchema hsi = (AgentActionSchema) getSchema(HOSPITAL_SWAP_INFORM);
+			hsi.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			hsi.add(APPOINTMENT, csApp, ObjectSchema.MANDATORY);
+			
 			
 			add(new PredicateSchema(AVAILABLE), Available.class);
 
