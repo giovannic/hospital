@@ -209,6 +209,55 @@ public class HospitalAgent extends Agent {
 		}	
 	}
 	
+	
+	public class RespondToProposal2 extends CyclicBehaviour {
+		
+		public RespondToProposal2(Agent agent) {
+			super(agent);
+		}
+		
+		@Override
+		public void action() {
+			ACLMessage msg = receive(messageMatcher.RequestSwap);
+			
+			if(msg != null) {
+				
+				ACLMessage reply = msg.createReply();
+				reply.addReceiver(msg.getSender());
+
+				try {
+					ContentElement content = getContentManager().extractContent(msg);
+					Concept action = ((Action)content).getAction();
+					if(action instanceof PatientRequestSwap) {
+						Appointment requested = ((PatientRequestSwap) action).getRequestedAppointment();
+						if(isTaken(requested)) {
+							System.err.println("WRONG!!! appointment " + requested.getNumber() + " is owned");
+							reply.setPerformative(ACLMessage.REFUSE);
+						} else {
+							int current = ((PatientRequestSwap) action).getCurrentAppointment().getNumber();
+							takenSlots[requested.getNumber()-1] = takenSlots[current-1];
+							takenSlots[current-1] = null;
+							reply.setPerformative(ACLMessage.INFORM);
+							Owner owner = new Owner(getAID());
+							IsOwned isOwned = new IsOwned(requested, owner);
+							getContentManager().fillContent(reply, isOwned);
+						}
+						send(reply);
+					}
+				} catch (UngroundedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (CodecException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}		
+	}
+	
 	public class UpdateAppointments extends CyclicBehaviour {
 		
 		public UpdateAppointments(Agent agent){
@@ -260,6 +309,11 @@ public class HospitalAgent extends Agent {
 			
 		}
 		
+	}
+
+	public boolean isTaken(Appointment requested) {
+		int toCompare = requested.getNumber()-1;
+		return takenSlots[toCompare] != null;
 	}
 	
 }

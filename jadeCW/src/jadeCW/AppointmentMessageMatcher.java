@@ -63,7 +63,7 @@ public class AppointmentMessageMatcher {
 	
 	//match message on content being of type owner
 		@SuppressWarnings("serial")
-		private final MatchExpression Swap = new MatchExpression(){
+		private final MatchExpression SwapInf = new MatchExpression(){
 
 			@Override
 			public boolean match(ACLMessage arg0) {
@@ -82,6 +82,28 @@ public class AppointmentMessageMatcher {
 			}
 
 		};
+		
+		//match message on content being of type owner
+			@SuppressWarnings("serial")
+			private final MatchExpression SwapReq = new MatchExpression(){
+
+				@Override
+				public boolean match(ACLMessage arg0) {
+					try {
+						ContentElement content = myAgent.getContentManager().extractContent(arg0);
+						Concept action = ((Action)content).getAction();
+						return (action instanceof PatientRequestSwap);
+					} catch (UngroundedException e) {
+						e.printStackTrace();
+					} catch (CodecException e) {
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						e.printStackTrace();
+					}
+					return false;
+				}
+
+			};
 	
 	public final MessageTemplate OwnerRequest = MessageTemplate.and(
 			MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
@@ -93,6 +115,10 @@ public class AppointmentMessageMatcher {
 	
 	public final MessageTemplate SwapInform = MessageTemplate.and(
 			MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-			new MessageTemplate(Swap));
+			new MessageTemplate(SwapInf));
+	
+	public final MessageTemplate RequestSwap = MessageTemplate.and(
+			MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+			new MessageTemplate(SwapReq));
 	
 }
