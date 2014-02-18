@@ -78,17 +78,16 @@ public class PatientAgent extends Agent {
 						template, sc)) {
 			protected void handleInform(ACLMessage inform) {
 
-				System.out.println("Agent " + getLocalName()
-						+ ": Notification received from DF");
+				System.out.println(getLocalName() + ": Notification received from DF");
 				try {
 					DFAgentDescription[] results = DFService
 							.decodeNotification(inform.getContent());
 					if (results.length != 1) {
-						System.out.print("There should only be one hospital");
+						System.err.print(getLocalName() +": Multiple hospitals detected");
 					} else {
 						setProvider(results[0].getName());
 						myAgent.addBehaviour(new RequestAppointment(myAgent));
-						System.out.println("found hospital");
+						System.out.println(getLocalName() + ": Found hospital");
 					}
 				} catch (FIPAException fe) {
 					fe.printStackTrace();
@@ -151,10 +150,11 @@ public class PatientAgent extends Agent {
 			//add response behaviour
 			addBehaviour(new SimpleAchieveREInitiator(myAgent, requestMsg) {
 				protected void handleInform(ACLMessage msg) {
-					System.out.println("Engagement successfully completed");
 					try {
 						Available content = (Available) getContentManager().extractContent(msg);
 						allocation = content.getAppointment();
+						System.out.println(getLocalName() + ": Engagement successfully completed. " +
+								"Allocated " + allocation.getNumber());
 						myAgent.addBehaviour(new FindAppointmentOwner(myAgent));
 						return;
 					} catch (UngroundedException e) {
@@ -168,7 +168,7 @@ public class PatientAgent extends Agent {
 					finished = false;
 				}
 				protected void handleRefuse(ACLMessage msg) {
-					System.out.println("Engagement refused");
+					System.out.println(getLocalName() + "Engagement refused");
 					
 				}
 			});
@@ -198,17 +198,15 @@ public class PatientAgent extends Agent {
 			requestMsg.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
 			requestMsg.setOntology(AppointmentOntology.NAME);
 			requestMsg.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
-			System.out.println("find appt owner constructed");
 		}
 
 
 
 		@Override
 		public void action() {
-			System.out.println("beginning to find appt owner");
 			//only request if appointment is allocated
 			if(allocation == null){
-				System.out.println("allocation null");
+				System.err.println(getLocalName() + ": Allocation null. Detected in FindAppointmentOwner");
 				return;
 			}
 			//if there is no provider, return
@@ -225,9 +223,6 @@ public class PatientAgent extends Agent {
 				return;
 			} else {
 				
-				System.out.println("action FAO");
-
-				
 				FindOwner act = new FindOwner();
 				act.setAppointment(preferredApp);
 				try {
@@ -243,9 +238,7 @@ public class PatientAgent extends Agent {
 							IsOwned content = (IsOwned) getContentManager().extractContent(msg);
 							String owner = content.getOwner().getPatient();
 							agentWithPreferred = new AID(owner, true);
-							System.out.println("agent with preferred appt: " + agentWithPreferred.getLocalName());
-							System.out.println("this agent: " + getAID().getLocalName());
-							System.out.println("creating a proposal to swap");
+							System.out.println(getLocalName() + ": Detected preferred appointment with " + agentWithPreferred.getLocalName());
 							myAgent.addBehaviour(new ProposeSwap(myAgent));
 						} catch (UngroundedException e) {
 							e.printStackTrace();
@@ -256,13 +249,12 @@ public class PatientAgent extends Agent {
 						}
 					}
 					protected void handleRefuse(ACLMessage msg) {
-						System.out.println("Engagement refused");
+						System.out.println(getLocalName() + ": Engagement refused");
 						
 					}
 				});
 				
 				this.finished = true;
-				System.out.println("sending fao");
 			}
 		}
 		
@@ -293,7 +285,6 @@ public class PatientAgent extends Agent {
 			proposeMsg.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
 			
 			best = preferences.getBestPreferences();
-			System.out.println("Proposal Swap Constructed");
 		}
 		
 		@Override
@@ -301,7 +292,7 @@ public class PatientAgent extends Agent {
 			
 			//only request if appointment is allocated
 			if(allocation == null){
-				System.out.println("allocation null");
+				System.err.println(getLocalName() + ": Allocation null in ProposeSwap");
 				return;
 			}
 			//if there is no partner, return
@@ -318,7 +309,7 @@ public class PatientAgent extends Agent {
 				PatientRequestSwap act = new PatientRequestSwap();
 				act.setCurrentAppointment(allocation);
 				act.setRequestedAppointment(preferredApp);
-				System.out.println("Proposing swap with agent " + agentWithPreferred);
+				System.out.println(getLocalName() + ": Proposing swap with agent " + agentWithPreferred.getLocalName());
 				
 				try {
 					getContentManager().fillContent(proposeMsg, new Action(agentWithPreferred, act));
@@ -333,17 +324,15 @@ public class PatientAgent extends Agent {
 							// Extract new appointment
 							IsOwned content = (IsOwned) getContentManager().extractContent(msg);
 							Appointment newApp = content.getAppointment();
-							System.out.println("Swap confirmed in " + myAgent.getLocalName() + ". NewApp set to " + newApp.getNumber());
+							System.out.println(getLocalName() + ": Swap confirmed. " +
+									"New app: " + newApp.getNumber() + " from: " + agentWithPreferred.getLocalName());
 							
 							if(!agentWithPreferred.equals(provider)){
-								System.out.println("Informing hospital");
+								System.out.println(getLocalName() + ": Informing hospital of swap with " + agentWithPreferred.getLocalName() );
 								// Construct inform message for hospital
 								HospitalSwapInform inform = new HospitalSwapInform();
 								inform.setCurrentlyOwned(allocation);
 								inform.setNewAppointment(newApp);
-								System.out.println("allocation for " + myAgent.getLocalName() + " is " + allocation.getNumber());
-								System.out.println("new appointment to override in" + myAgent.getLocalName() + " is " + newApp.getNumber());
-								System.out.println("sendinding these values to hospital from " + myAgent.getLocalName());
 								ACLMessage hospInform = new ACLMessage(ACLMessage.INFORM);
 								hospInform.addReceiver(provider);
 								hospInform.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
@@ -357,7 +346,7 @@ public class PatientAgent extends Agent {
 							
 							// Set our allocation to the new appointment
 							allocation = newApp;
-							System.out.println(myAgent.getLocalName() + " appointment is now " + newApp.getNumber());
+							System.out.println(myAgent.getLocalName() + ": Appointment is now " + newApp.getNumber());
 							responded = true;
 							fireResponses();
 							
@@ -379,7 +368,7 @@ public class PatientAgent extends Agent {
 					}
 
 					protected void handleRefuse(ACLMessage msg) {
-						System.out.println("Swap request refused");						
+						System.out.println(getLocalName() + ": Swap request refused");						
 					}
 				});
 				
@@ -414,8 +403,10 @@ public class PatientAgent extends Agent {
 			if(msg != null) {
 				//only request if appointment is allocated
 				if(allocation == null){
-					System.out.println("allocation null");
-					//TODO send reject
+					System.err.println(getLocalName() + ": Allocation null in RespondToProposal1");
+					ACLMessage rejection = msg.createReply();
+					rejection.setPerformative(ACLMessage.REFUSE);
+					send(rejection);
 				}
 				ContentElement content;
 				try {
@@ -453,24 +444,23 @@ public class PatientAgent extends Agent {
 
 		reply.setPerformative(ACLMessage.REFUSE);
 		if(!action.getRequestedAppointment().equals(allocation)) {
-			System.err.println("WRONG!!! incorrect appointment sent");
+			System.err.println(getLocalName() +": WRONG!!! incorrect appointment sent");
 			reply.setPerformative(ACLMessage.REFUSE);
-			System.err.println("requested appointment " + action.getRequestedAppointment().getNumber()
+			System.err.println(getLocalName() +": Requested appointment " + action.getRequestedAppointment().getNumber()
 					+ ". actual appointment owned is " + allocation.getNumber());
 		} else if(!isAsDesirable(action.getCurrentAppointment())){
 			reply.setPerformative(ACLMessage.REFUSE);
-			System.err.println("requested appointment " + action.getCurrentAppointment().getNumber()
+			System.err.println("Requested appointment " + action.getCurrentAppointment().getNumber()
 					+ " isn't as desirable as " + allocation.getNumber());
-			System.err.println("received from " + msg.getSender().getLocalName() + " to " + getLocalName());
 		} else {
 			reply.setPerformative(ACLMessage.INFORM);
 			Appointment toSend = allocation;
 			allocation = action.getCurrentAppointment();
 			Owner owner = new Owner(getAID());
 			IsOwned isOwned = new IsOwned(toSend, owner);
-			System.out.println("from " + getLocalName() + " sending allocation " + toSend.getNumber());
-			System.out.println("currently in " + getLocalName() + " my allocation " + allocation.getNumber());
 			getContentManager().fillContent(reply, isOwned);
+			System.out.println(getLocalName() + ": Sending RespondToProposal to " + msg.getSender() +
+							". Giving " + toSend.getNumber());
 			ACLMessage hospitalInfMsg = new ACLMessage(ACLMessage.INFORM);
 			hospitalInfMsg.addReceiver(provider);
 			hospitalInfMsg.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
@@ -480,7 +470,7 @@ public class PatientAgent extends Agent {
 			hsi.setCurrentlyOwned(toSend);
 			hsi.setNewAppointment(allocation);
 			getContentManager().fillContent(hospitalInfMsg, hsi);
-			System.out.println("sending to hospital now from " + getLocalName());
+			System.out.println(getLocalName() +": Informing hospital of swap.");
 			send(hospitalInfMsg);
 		}
 		send(reply);

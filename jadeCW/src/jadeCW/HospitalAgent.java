@@ -103,11 +103,11 @@ public class HospitalAgent extends Agent {
 					content = getContentManager().extractContent(msg);
 					Concept action = ((Action)content).getAction();
 					if( action instanceof AssignAppointment ) {
-						System.out.println("Looking for appointment to assign " +
+						System.out.println(getLocalName() + ": Looking for appointment to assign " +
 								"to " + msg.getSender().getLocalName());
 						if(available <= 0){
 							reply.setPerformative(ACLMessage.REFUSE);
-							System.out.println("No appointment available for " +
+							System.out.println(getLocalName() + ": No appointment available for " +
 								msg.getSender().getLocalName());
 						}
 						else {
@@ -127,9 +127,10 @@ public class HospitalAgent extends Agent {
 								appt.setNumber(++slot);
 								av.setAppointment(appt);
 								getContentManager().fillContent(reply, av);
-								System.out.println("Appointment " + slot + " assigned to " + msg.getSender().getLocalName());
+								System.out.println(getLocalName() + ": Appointment " + slot + " assigned to " + 
+										msg.getSender().getLocalName() + ". Message sent.");
 							} else {
-								System.out.println("No appointment available for " +
+								System.out.println(getLocalName() + "No appointment available for " +
 										msg.getSender().getLocalName());
 								reply.setPerformative(ACLMessage.REFUSE);
 							}
@@ -170,7 +171,6 @@ public class HospitalAgent extends Agent {
 			ACLMessage msg = receive(messageMatcher.OwnerRequest);
 			
 			if(msg != null) {
-				System.out.println("message received");
 				//System.out.println("Agent "+getLocalName()+": REQUEST message received.");
 				ACLMessage reply = msg.createReply();
 				reply.addReceiver(msg.getSender());
@@ -182,7 +182,7 @@ public class HospitalAgent extends Agent {
 					
 					if (wanted < 0 || wanted >= takenSlots.length){
 						//appointment not in range
-						System.out.println("Invalid appointment: " +
+						System.out.println(getLocalName() + ": Invalid appointment: " +
 								(wanted+1));
 						reply.setPerformative(ACLMessage.REFUSE);
 						
@@ -194,7 +194,7 @@ public class HospitalAgent extends Agent {
 						
 						if( agentOwner == null) {
 							//not assigned
-							System.out.println("No patient assigned appointment: " +
+							System.out.println(getLocalName() + ": No patient assigned appointment: " +
 									(wanted+1));
 							owner = new Owner(getAID());
 						}
@@ -206,9 +206,10 @@ public class HospitalAgent extends Agent {
 						appt.setNumber(wanted+1);
 						IsOwned isOwned = new IsOwned(appt, owner);
 						getContentManager().fillContent(reply, isOwned);
-						System.out.println("Preferred appointment " + (wanted+1) + 
-								" assigned to patient: " + owner.getPatient());
-						System.out.println("Desired by patient: " + msg.getSender().getName());
+						System.out.println(getLocalName() + ": Responding to query. " +
+								"Preferred appointment " + (wanted+1) + 
+								" assigned to patient: " + owner.getPatient() +
+								"Request made by: " + msg.getSender().getLocalName());
 						
 					}
 				} catch (UngroundedException e) {
@@ -294,7 +295,7 @@ public class HospitalAgent extends Agent {
 					int current = content.getCurrentlyOwned().getNumber();
 					int requested = content.getNewAppointment().getNumber();
 					Pair pair = new Pair(current, requested);
-					System.out.println("Hospital receieved swap request for apps: " + current + " " + requested + "from " + msg.getSender().getLocalName());
+					System.out.println(getLocalName() + ": Rreceieved swap request for appts: " + current + " " + requested + "from " + msg.getSender().getLocalName());
 
 					// Check if other agent in swap has already informed
 					if(swapRequests.contains(pair)){
@@ -303,11 +304,10 @@ public class HospitalAgent extends Agent {
 						AID temp = takenSlots[current-1];
 						takenSlots[current-1] = takenSlots[requested-1];
 						takenSlots[requested-1] = temp;
-						System.out.println("Hospital - " + current + " and " + requested + " swapped for " + msg.getSender().getLocalName());
+						System.out.println(getLocalName() + ": Swapped appointments: " + current + " and " + requested);
 					}
 					else{
 						// else add to swapRequests and wait for message from other agent in swap
-						System.out.println("Hospital adding pair: " + current + " " + requested);
 						swapRequests.add(pair);
 					}
 					
