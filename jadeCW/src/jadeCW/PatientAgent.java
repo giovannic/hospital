@@ -33,7 +33,6 @@ public class PatientAgent extends Agent {
 	AID provider;
 	Appointment allocation;
 	Preferences preferences;
-	protected boolean finished = false;
 	AID agentWithPreferred = null;
 	Appointment preferredApp;
 	
@@ -99,6 +98,7 @@ public class PatientAgent extends Agent {
 	public class RequestAppointment extends Behaviour {
 
 		ACLMessage requestMsg;
+		private boolean finished = false;
 		
 		public RequestAppointment(Agent patientAgent) {
 			super(patientAgent);
@@ -158,14 +158,14 @@ public class PatientAgent extends Agent {
 				}
 			});
 			
-			finished = true;
+			this.finished = true;
 		}
 		
 		
 
 		@Override
 		public boolean done() {
-			return finished;
+			return this.finished ;
 		}
 	
 	}
@@ -174,6 +174,7 @@ public class PatientAgent extends Agent {
 
 		ACLMessage requestMsg;
 		Set<Integer> best;
+		private boolean finished = false;
 		
 		public FindAppointmentOwner(Agent patientAgent) {
 			super(patientAgent);
@@ -191,6 +192,7 @@ public class PatientAgent extends Agent {
 
 		@Override
 		public void action() {
+			System.out.println("beginning to find appt owner");
 			//only request if appointment is allocated
 			if(allocation == null){
 				System.out.println("allocation null");
@@ -204,6 +206,8 @@ public class PatientAgent extends Agent {
 			Integer appointment = allocation.getNumber();
 			
 			if(best.contains(appointment)) {
+				
+				this.finished = true;
 				//already have best, do nothing
 				return;
 			} else {
@@ -232,6 +236,9 @@ public class PatientAgent extends Agent {
 							preferredApp = content.getAppointment();
 							agentWithPreferred = new AID(owner, true);
 							System.out.println("agent with preferred appt: " + agentWithPreferred.getLocalName());
+							System.out.println("this agent: " + getAID().getLocalName());
+							System.out.println("creating a proposal to swap");
+							myAgent.addBehaviour(new ProposeSwap(myAgent));
 						} catch (UngroundedException e) {
 							e.printStackTrace();
 						} catch (CodecException e) {
@@ -246,7 +253,7 @@ public class PatientAgent extends Agent {
 					}
 				});
 				
-				finished = true;
+				this.finished = true;
 				System.out.println("sending fao");
 			}
 		}
@@ -255,7 +262,7 @@ public class PatientAgent extends Agent {
 
 		@Override
 		public boolean done() {
-			return finished;
+			return this.finished;
 		}
 		
 	}
@@ -266,6 +273,7 @@ public class PatientAgent extends Agent {
 
 		ACLMessage proposeMsg;
 		Set<Integer> best;
+		private boolean finished = false;
 		
 		public ProposeSwap(Agent patientAgent) {
 			super(patientAgent);
@@ -277,7 +285,7 @@ public class PatientAgent extends Agent {
 			proposeMsg.setProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
 			
 			best = preferences.getBestPreferences();
-			System.out.println("Request Swap Constructed");
+			System.out.println("Proposal Swap Constructed");
 		}
 		
 		@Override
@@ -296,6 +304,7 @@ public class PatientAgent extends Agent {
 			Integer appointment = allocation.getNumber();
 			
 			if(best.contains(appointment)) {
+				this.finished = true;
 				return;
 			} else {
 				
@@ -355,13 +364,13 @@ public class PatientAgent extends Agent {
 				
 			}
 			
-			finished = true;
+			this.finished = true;
 			
 		}
 		
 		@Override
 		public boolean done() {
-			return finished;
+			return this.finished;
 		}
 		
 		
