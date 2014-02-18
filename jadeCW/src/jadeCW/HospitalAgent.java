@@ -180,13 +180,10 @@ public class HospitalAgent extends Agent {
 						
 					} else { // appt found
 						reply.setPerformative(ACLMessage.INFORM);
-						IsOwned isOwned = new IsOwned();
-						Owner owner = new Owner();
-						owner.setPatient(agentOwner.getName());
+						Owner owner = new Owner(agentOwner);
 						Appointment appt = new Appointment();
 						appt.setNumber(wanted);
-						isOwned.setAppointment(appt);
-						isOwned.setOwner(owner);
+						IsOwned isOwned = new IsOwned(appt, owner);
 						getContentManager().fillContent(reply, isOwned);
 						System.out.println("Preferred appointment " + (wanted+1) + 
 								" assigned to patient: " + owner.getPatient());
